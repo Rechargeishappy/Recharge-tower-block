@@ -4739,6 +4739,87 @@ button,.arcadeBtn,.tabbtn{min-height:44px;touch-action:manipulation}
   top:7px!important;
   right:7px!important;
 }
+
+/* V64: carousel arrow/slide scale fix
+   Keep arrow controls from inheriting CTA transforms and lock slide geometry. */
+#howOverlay .how-carousel,
+#prizeOverlay .prize-carousel{
+  overflow:hidden!important;
+  transform:none!important;
+  contain:layout paint!important;
+}
+#howOverlay .how-track{
+  display:flex!important;
+  width:400%!important;
+  height:100%!important;
+  flex-wrap:nowrap!important;
+  will-change:transform!important;
+  transform-origin:left center!important;
+}
+#howOverlay .how-page{
+  flex:0 0 25%!important;
+  width:25%!important;
+  min-width:25%!important;
+  max-width:25%!important;
+  height:100%!important;
+  transform:none!important;
+  overflow:hidden!important;
+}
+#howOverlay .how-page img{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  transform:none!important;
+}
+#prizeOverlay .prize-track{
+  display:flex!important;
+  width:100%!important;
+  height:100%!important;
+  flex-wrap:nowrap!important;
+  will-change:transform!important;
+  transform-origin:left center!important;
+}
+#prizeOverlay .prize-page{
+  flex:0 0 100%!important;
+  width:100%!important;
+  min-width:100%!important;
+  max-width:100%!important;
+  height:100%!important;
+  transform:none!important;
+}
+#prizeOverlay .prize-page::before,
+#prizeOverlay .prize-page::after{
+  transform:none!important;
+}
+#howOverlay .how-arrow,
+#prizeOverlay .prize-arrow{
+  width:38px!important;
+  height:34px!important;
+  min-width:38px!important;
+  min-height:34px!important;
+  max-width:38px!important;
+  max-height:34px!important;
+  padding:0!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 auto!important;
+  transform:none!important;
+  transition:background-color .12s ease,color .12s ease!important;
+  contain:layout paint!important;
+}
+#howOverlay .how-arrow:active,
+#prizeOverlay .prize-arrow:active{
+  transform:translate(1px,2px)!important;
+}
+#howOverlay .how-nav.final-step #howNext.is-play{
+  width:100%!important;
+  max-width:none!important;
+  height:42px!important;
+  min-height:42px!important;
+}
 </style>
 </head>
 <body>
