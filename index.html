@@ -103,7 +103,7 @@
   45%{transform:scale(1.1);} 60%{transform:scale(1.22);} 100%{transform:scale(1.15); opacity:1;} }
 
 .overlay.arcade{ background:#000; padding:14px; }
-#saveLoadingOverlay{ position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center;
+#saveLoadingOverlay{ position:absolute; inset:0; z-index:99999; display:none; align-items:center; justify-content:center;
   background:rgba(5,7,16,.72); }
 .save-loading-box{ display:flex; flex-direction:column; align-items:center; gap:10px;
   background:rgba(8,10,20,.92); border:2px solid #000; box-shadow:0 0 0 1px #6b7bb8, 4px 4px 0 0 rgba(0,0,0,.6);
@@ -186,7 +186,7 @@
 @keyframes shineSweep{0%{left:-70%;}30%{left:130%;}100%{left:130%;}}
 .startMega .bolt{position:absolute;top:-14px;right:-8px;font-size:26px;filter:drop-shadow(2px 2px 0 #151515);animation:boltWiggle 2.4s ease-in-out infinite;pointer-events:none;}
 @keyframes boltWiggle{0%,100%{transform:rotate(-10deg);}50%{transform:rotate(10deg) scale(1.12);}}
-.round-friendly{font-family:'Press Start 2P',monospace;font-size:6.5px;line-height:1.9;color:#aab6da;background:rgba(10,14,24,.6);border:2px solid rgba(107,123,184,.5);border-radius:6px;padding:8px 10px;text-align:center;}
+.round-friendly{font-family:'Press Start 2P',monospace;font-size:9px;line-height:1.9;color:#aab6da;background:rgba(10,14,24,.6);border:2px solid rgba(107,123,184,.5);border-radius:6px;padding:8px 10px;text-align:center;}
 #startTabs,#startLbList,#startOverlay .prizeBtn,#startOverlay>.crt>.press-start{display:none!important}
 #howOverlay{display:none;z-index:10;background:rgba(9,18,26,.86);padding:14px}
 .how-card{width:100%;max-width:350px;max-height:94%;overflow-y:auto;background:#f8f3df;color:#2d3832;border:3px solid #405247;border-radius:18px;padding:16px;box-shadow:0 14px 45px rgba(0,0,0,.5)}
@@ -308,7 +308,7 @@
 .homeAction.prize{background-image:var(--asset-menu-prize)!important;}
 .homeAction.how{background-image:var(--asset-menu-how)!important;}
 .homeAction.rank{background-image:var(--asset-menu-rank)!important;}
-.round-friendly{font-size:6px!important;padding:6px 8px!important;}
+.round-friendly{font-size:8px!important;padding:6px 8px!important;}
 
 /* tutorial: image fills the card, copy becomes a lower arcade caption */
 .how-card{padding:10px!important;height:min(94vh,680px)!important;}
@@ -419,7 +419,7 @@
 }
 .round-friendly{
   padding:6px 9px!important;
-  font-size:5.8px!important;
+  font-size:8px!important;
   line-height:1.65!important;
   margin-top:0!important;
 }
@@ -647,7 +647,7 @@
 }
 .round-friendly{
   padding:5px 8px!important;
-  font-size:5.2px!important;
+  font-size:7px!important;
   line-height:1.45!important;
   border-width:2px!important;
 }
@@ -1169,8 +1169,8 @@
 }
 
 /* ================= V23: RANK TIERS + PRIZE UX ================= */
-.startMega{top:-9vh!important;}
-.startMega:active{top:calc(-9vh + 3px)!important;}
+.startMega{top:-10vh!important;}
+.startMega:active{top:calc(-10vh + 3px)!important;}
 .home-actions{width:54%!important;gap:28px!important;margin-top:-1vh!important;}
 .homeAction span{display:none!important;}
 .homeAction{min-width:42px!important;max-width:58px!important;}
@@ -1208,8 +1208,8 @@
 .hero-top{top:22%!important;}
 .brand-logo{width:min(72%,288px)!important;}
 #homeTitle .t2{font-size:clamp(34px,10vw,46px)!important;}
-.startMega{top:-9.5vh!important;width:74%!important;height:clamp(52px,11.5vw,62px)!important;padding-bottom:11px!important;}
-.startMega:active{top:calc(-9.5vh + 3px)!important;}
+.startMega{top:-10.5vh!important;width:74%!important;height:clamp(52px,11.5vw,62px)!important;padding-bottom:11px!important;}
+.startMega:active{top:calc(-10.5vh + 3px)!important;}
 .home-actions{width:52%!important;gap:30px!important;margin-top:-1.7vh!important;}
 .homeAction{max-width:54px!important;}
 
@@ -3326,7 +3326,7 @@
           </div>
           <div class="prompt-question">บันทึกคะแนนเพื่อลุ้นรางวัล</div>
           <button class="arcadeBtn prompt-save" id="btnPromptSave" type="button">บันทึกคะแนนเพื่อลุ้นรางวัล</button>
-          <button class="arcadeBtn ghost prompt-skip" id="btnPromptSkip" type="button">CONTINUE WITHOUT SAVING</button>
+          <button class="arcadeBtn ghost prompt-skip" id="btnPromptSkip" type="button">ข้ามไปเลย (ไม่ลุ้นรางวัล)</button>
         </section>
 
         <div id="nameModal" style="display:none;">
@@ -4423,10 +4423,24 @@ function weeklyRoundKey(ts){
   return rd.getUTCFullYear()+'-'+String(rd.getUTCMonth()+1).padStart(2,'0')+'-'+String(rd.getUTCDate()).padStart(2,'0')+'T16';
 }
 function roundDisplay(){
+  // v8: ใช้ข้อมูลรอบจาก server เป็นหลัก (SERVER_ROUND_INFO) — ถ้ายังดึงไม่สำเร็จ/ยังไม่ได้ดึง
+  // ค่อย fallback ไปคำนวณเองฝั่ง client ชั่วคราว (เผื่อ server ล่ม ไม่ให้จอว่างเปล่า)
+  const fmt=d=>d.toLocaleDateString('th-TH',{day:'numeric',month:'short',timeZone:'Asia/Bangkok'});
+  if(SERVER_ROUND_INFO){
+    return `${fmt(new Date(SERVER_ROUND_INFO.startMs))} 16:00 – ${fmt(new Date(SERVER_ROUND_INFO.endMs))} 16:00`;
+  }
   const key=weeklyRoundKey(); const [date]=key.split('T'); const start=new Date(date+'T16:00:00+07:00');
   const end=new Date(start.getTime()+7*86400000);
-  const fmt=d=>d.toLocaleDateString('th-TH',{day:'numeric',month:'short',timeZone:'Asia/Bangkok'});
   return `${fmt(start)} 16:00 – ${fmt(end)} 16:00`;
+}
+let SERVER_ROUND_INFO=null;
+async function fetchRoundInfo(){
+  if(!CONFIG.LB_URL) return;
+  try{
+    const res=await fetch(CONFIG.LB_URL+'?scope=roundinfo');
+    const data=await res.json();
+    if(data && data.roundKey && data.startMs && data.endMs) SERVER_ROUND_INFO=data;
+  }catch(e){ console.warn('fetchRoundInfo failed, ใช้ค่าคำนวณเองฝั่ง client ชั่วคราวแทน',e); }
 }
 
 // รายการคำต้องห้ามแบบย่อ — กรองพื้นฐาน ไม่ครอบคลุมทุกกรณี แก้ไข/เพิ่มได้ตามต้องการ
@@ -5075,10 +5089,10 @@ document.getElementById('howNext')?.addEventListener('click',(e)=>{
 });
 let howTouchX=0;document.getElementById('howCarousel')?.addEventListener('touchstart',e=>{howTouchX=e.touches[0].clientX},{passive:true});document.getElementById('howCarousel')?.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-howTouchX;if(Math.abs(dx)>42)setHowPage(howIndex+(dx<0?1:-1));},{passive:true});
 function renderRanking(scope){
-  const list=document.getElementById('rankingList');const data=(scope==='all'?LB_ALL:LB_WEEK)||[];const mine=lsGet('rt_name','');
+  const list=document.getElementById('rankingList');const data=(scope==='all'?LB_ALL:LB_WEEK)||[];const myLast4=(lsGet('rt_phone','')||'').slice(-4);
   list.innerHTML='';
   if(!data.length){list.innerHTML='<div class="rank-row"><span class="rk">—</span><span>ยังไม่มีคะแนนในบอร์ด</span><span class="sc">0</span></div>';return;}
-  data.slice(0,15).forEach((r,i)=>{const row=document.createElement('div');row.className='rank-row'+(i<3?' top':'')+(mine&&r.name===mine?' me':'');row.innerHTML='<span class="rk">#'+(i+1)+'</span><span>'+esc(r.name||'PLAYER')+'</span><span class="sc">'+fmtScore(r.score||0)+'</span>';list.appendChild(row);});
+  data.slice(0,15).forEach((r,i)=>{const row=document.createElement('div');row.className='rank-row'+(i<3?' top':'')+(myLast4&&r.phoneLast4===myLast4?' me':'');row.innerHTML='<span class="rk">#'+(i+1)+'</span><span>'+esc(r.name||'PLAYER')+'</span><span class="sc">'+fmtScore(r.score||0)+'</span>';list.appendChild(row);});
 }
 async function openRanking(scope){
   document.getElementById('rankingOverlay').style.display='flex';
@@ -5158,6 +5172,7 @@ function goHome(){
   const nameModal=document.getElementById('nameModal'); nameModal?.classList.remove('open');
   document.getElementById('startOverlay').style.display='flex';
   refreshBoards();
+  fetchRoundInfo().then(()=>{ const rl=document.getElementById('roundLabel'); if(rl) rl.innerHTML='รอบประจำสัปดาห์ · '+roundDisplay(); }); // เผื่อรอบสัปดาห์เปลี่ยนระหว่างเล่นอยู่
 }
 document.getElementById('btnGameOverHome')?.addEventListener('click',(e)=>{e.stopPropagation();goHome();});
 document.getElementById('btnShareHome')?.addEventListener('click',(e)=>{e.stopPropagation();goHome();});
@@ -5195,10 +5210,11 @@ function boot(){
   if(t4 && rewardHero?.src) t4.src=rewardHero.src;
   const foot=document.getElementById('footNote');
   const mode=activeWeeklyMode();
-  const rl=document.getElementById('roundLabel'); if(rl) rl.innerHTML='รอบ: '+roundDisplay()+'<br><b>'+mode.name+'</b> · '+mode.th;
+  const rl=document.getElementById('roundLabel'); if(rl) rl.innerHTML='รอบประจำสัปดาห์ · '+roundDisplay();
   const rule=document.getElementById('weeklyRuleChip'); if(rule) rule.textContent='WEEKLY RULE · '+mode.name+' · '+mode.th;
   if(foot){ foot.textContent=''; foot.hidden=true; }
   refreshBoards();
+  fetchRoundInfo().then(()=>{ if(rl) rl.innerHTML='รอบประจำสัปดาห์ · '+roundDisplay(); }); // อัปเดตซ้ำด้วยข้อมูลจริงจาก server ทันทีที่โหลดเสร็จ
   if(!booted){ booted=true; lastT=0; requestAnimationFrame(loop); }
 }
 window.addEventListener('load',boot); setTimeout(boot,50);
