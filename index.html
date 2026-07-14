@@ -4408,6 +4408,7 @@ function toggleSfx(){ sfxMuted=!sfxMuted; lsSet('rt_sfx_muted',sfxMuted); syncAu
 function toggleBgm(){ bgmMuted=!bgmMuted; lsSet('rt_bgm_muted',bgmMuted); applyBgmState(); }
 
 function fmtScore(n){ return (n||0).toLocaleString(); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function setSaveLoading(on){ const el=document.getElementById('saveLoadingOverlay'); if(el) el.style.display=on?'flex':'none'; }
 
 // รอบ Weekly ของร้าน: ศุกร์ 16:00 ถึงศุกร์ถัดไปก่อน 16:00 (Asia/Bangkok)
