@@ -5079,7 +5079,14 @@ function renderRanking(scope){
   if(!data.length){list.innerHTML='<div class="rank-row"><span class="rk">—</span><span>ยังไม่มีคะแนนในบอร์ด</span><span class="sc">0</span></div>';return;}
   data.slice(0,15).forEach((r,i)=>{const row=document.createElement('div');row.className='rank-row'+(i<3?' top':'')+(mine&&r.name===mine?' me':'');row.innerHTML='<span class="rk">#'+(i+1)+'</span><span>'+esc(r.name||'PLAYER')+'</span><span class="sc">'+fmtScore(r.score||0)+'</span>';list.appendChild(row);});
 }
-function openRanking(scope){document.getElementById('rankingOverlay').style.display='flex';document.querySelectorAll('.ranking-tabs .tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.rscope===scope));renderRanking(scope);}
+async function openRanking(scope){
+  document.getElementById('rankingOverlay').style.display='flex';
+  document.querySelectorAll('.ranking-tabs .tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.rscope===scope));
+  setSaveLoading(true);
+  await refreshBoards(); // ดึงข้อมูลใหม่ทุกครั้งที่เปิด (กันเคสโหลดครั้งแรกตอนเข้าเว็บพลาดแล้วค้างว่างเปล่าไปตลอด)
+  setSaveLoading(false);
+  renderRanking(scope);
+}
 document.querySelector('.ranking-tabs')?.addEventListener('click',e=>{const b=e.target.closest('.tabbtn');if(b)openRanking(b.dataset.rscope);});
 document.getElementById('btnCloseRanking')?.addEventListener('click',()=>document.getElementById('rankingOverlay').style.display='none');
 document.getElementById('btnRank')?.addEventListener('click',(e)=>{e.stopPropagation();openRanking('week');});
