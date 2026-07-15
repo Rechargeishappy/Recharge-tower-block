@@ -5374,10 +5374,26 @@ const WEEKLY_MODES=[
   {id:'classic',name:'CLASSIC CLIMB',th:'สมดุลมาตรฐาน',speed:1,range:1,precision:1,ramp:1},
   {id:'fast',name:'FAST SWING',th:'แกว่งเร็วขึ้น',speed:1.12,range:1,precision:1,ramp:1.02},
   {id:'precision',name:'PRECISION WEEK',th:'พื้นที่เพอร์เฟกต์แคบลง',speed:1.03,range:1.03,precision:.78,ramp:1.03},
-  {id:'pressure',name:'PRESSURE CLIMB',th:'ยิ่งสูงยิ่งเร็ว',speed:1,range:1.06,precision:.92,ramp:1.14}
+  {id:'pressure',name:'PRESSURE CLIMB',th:'ยิ่งสูงยิ่งเร็ว',speed:1,range:1.06,precision:.92,ramp:1.14},
+  {id:'heavy',name:'HEAVY TOWER',th:'หอคอยโยกหนักขึ้น',speed:.96,range:1.02,precision:.96,ramp:1.04},
+  {id:'narrow',name:'NARROW BLOCK',th:'บล็อกแคบลงเร็วขึ้น',speed:1.02,range:1.02,precision:.86,ramp:1.04},
+  {id:'rush',name:'RUSH HOUR',th:'เร่งเร็วตั้งแต่ต้น',speed:1.10,range:1.04,precision:.90,ramp:1.14},
+  {id:'chill',name:'CHILL BREW',th:'เล่นง่ายขึ้นเล็กน้อย',speed:.92,range:.96,precision:1.06,ramp:.96}
 ];
 let weeklyModeCache=null;
 function activeWeeklyMode(){
+  if(SERVER_ROUND_INFO?.difficulty){
+    const d=SERVER_ROUND_INFO.difficulty;
+    return {
+      id:SERVER_ROUND_INFO.weeklyMode||'classic',
+      name:SERVER_ROUND_INFO.modeLabel||'CLASSIC CLIMB',
+      th:SERVER_ROUND_INFO.modeDescription||'กติกาประจำสัปดาห์',
+      speed:Number(d.swingSpeed)||1,
+      range:1,
+      precision:1/Math.max(.5,Number(d.precision)||1),
+      ramp:Number(d.speedRamp)||1
+    };
+  }
   const key=weeklyRoundKey();
   if(weeklyModeCache?.key===key) return weeklyModeCache.mode;
   let hash=0; for(const ch of key) hash=(hash*31+ch.charCodeAt(0))>>>0;
@@ -5392,14 +5408,22 @@ function weeklyRamp(lvl){
 }
 function swaySpeedPx(lvl){
   const m=activeWeeklyMode();
-  const base=(115+lvl*3.4)*(1+Math.min(lvl*0.008,1.0));
+  const base=(112+lvl*3.0)*(1+Math.min(lvl*0.0065,1.0));
   const warmup=lvl<=1?0.72:lvl===2?0.80:lvl===3?0.90:1;
-  return base*warmup*m.speed*weeklyRamp(lvl);
+  return base*warmup*m.speed*weeklyRamp(lvl)*midGameSpeedEase(lvl);
 }
-function swingRange(prevW){ return (prevW*0.6+75)*activeWeeklyMode().range; }
-function perfectZone(lvl){ return Math.max(3.2,(14-lvl*0.08)*activeWeeklyMode().precision); }
+function swingRange(prevW){ return (prevW*0.6+75)*activeWeeklyMode().range*midGameRangeEase(level||1); }
+function perfectZone(lvl){ return Math.max(4.2,(14.5-lvl*0.07)*activeWeeklyMode().precision*midGamePerfectEase(lvl)); }
 function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 function smoothstep(a,b,x){ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); }
+function midGameAssist(lvl){
+  // v66: ช่วง 20–40 เคยยากเกินสำหรับผู้เล่นหน้าร้าน
+  // ค่อย ๆ ช่วยตั้งแต่ชั้น 16, ช่วยเต็มช่วง 24–40, แล้วคืนความยากกลับจนถึงชั้น 55
+  return smoothstep(16,24,lvl)*(1-smoothstep(40,55,lvl));
+}
+function midGameSpeedEase(lvl){ return 1-0.12*midGameAssist(lvl); }
+function midGameRangeEase(lvl){ return 1-0.07*midGameAssist(lvl); }
+function midGamePerfectEase(lvl){ return 1+0.10*midGameAssist(lvl); }
 function sizeStateFor(p){
   if(p<20) return {name:'LAST STAND',bg:'#e53b2c',fg:'#fff'};
   if(p<40) return {name:'CRITICAL',bg:'#f08c1e',fg:'#fff'};
@@ -6351,7 +6375,17 @@ async function fetchLeaderboard(scope){
     try{
       const res=await fetch(CONFIG.LB_URL+'?scope='+scope+'&limit=15');
       const data=await res.json();
-      return Array.isArray(data)?data:(data.rows||[]);
+      const rows = Array.isArray(data) ? data : (data.rows || data.board || data.data || []);
+      if(!Array.isArray(rows)) throw new Error('bad leaderboard response shape');
+      return rows.map(r=>({
+        name:r.name||r.Name||'PLAYER',
+        score:Number(r.score ?? r.Score ?? 0),
+        level:Number(r.level ?? r.Level ?? r.floor ?? r.Floor ?? 0),
+        maxCombo:Number(r.maxCombo ?? r.MaxCombo ?? 0),
+        phoneLast4:String(r.phoneLast4 ?? r.PhoneLast4 ?? ''),
+        ts:Number(r.ts ?? r.createdAt ?? r.Timestamp ?? Date.now()),
+        createdAt:Number(r.createdAt ?? r.ts ?? r.Timestamp ?? Date.now())
+      })).filter(r=>Number.isFinite(r.level));
     }catch(e){ console.warn('leaderboard fetch failed, using local cache instead',e); return localBoard(scope); }
   }
   return localBoard(scope);
@@ -7203,7 +7237,11 @@ function boot(){
   const rule=document.getElementById('weeklyRuleChip'); if(rule) rule.textContent='WEEKLY RULE · '+mode.name+' · '+mode.th;
   if(foot){ foot.textContent=''; foot.hidden=true; }
   refreshBoards();
-  fetchRoundInfo().then(()=>{ if(rl) rl.innerHTML='รอบประจำสัปดาห์ · '+roundDisplay(); }); // อัปเดตซ้ำด้วยข้อมูลจริงจาก server ทันทีที่โหลดเสร็จ
+  fetchRoundInfo().then(()=>{
+    if(rl) rl.innerHTML='รอบประจำสัปดาห์ · '+roundDisplay();
+    const freshMode=activeWeeklyMode();
+    if(rule) rule.textContent='WEEKLY RULE · '+freshMode.name+' · '+freshMode.th;
+  }); // อัปเดตซ้ำด้วยข้อมูลจริงจาก server ทันทีที่โหลดเสร็จ
   startIntroLoading();
   if(!booted){ booted=true; lastT=0; requestAnimationFrame(loop); }
 }
